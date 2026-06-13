@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PM Pet — Your Product Career Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --accent: #e85d26;
+    --accent2: #f5a623;
+    --green: #2d9e6b;
+    --text: #1a1008;
+    --muted: #8a7a6a;
+    --border: #e8e0d4;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(232,93,38,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,93,38,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 460px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .eyebrow {
+    font-size: 10px; letter-spacing: 4px; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px; color: var(--text);
+    letter-spacing: -1px; line-height: 1;
+  }
+  .header h1 span { color: var(--accent); }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-label {
+    font-size: 9px; letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; text-align: center;
+    margin-bottom: 14px;
+  }
+
+  /* Pet canvas area */
+  .pet-wrap {
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  .pet-name-row {
+    display: flex; align-items: center; gap: 6px;
+    justify-content: center; margin-bottom: 2px;
+  }
+  .pet-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px; color: var(--text);
+    cursor: pointer;
+    border-bottom: 2px dashed var(--border);
+    transition: border-color 0.2s;
+  }
+  .pet-name:hover { border-color: var(--accent); }
+  .pet-name-input {
+    font-family: 'DM Serif Display', serif; font-size: 22px;
+    border: 1.5px solid var(--accent); border-radius: 8px;
+    padding: 2px 10px; color: var(--text); background: var(--bg);
+    width: 160px; text-align: center;
+  }
+  .pet-name-input:focus { outline: none; }
+
+  .pet-stage-label {
+    font-size: 11px; color: var(--accent); letter-spacing: 2px;
+    margin-bottom: 3px; text-align: center;
+  }
+  .pet-stage-desc {
+    font-size: 11px; color: var(--muted); font-style: italic;
+    margin-bottom: 16px; text-align: center;
+  }
+
+  #petCanvas { display: block; }
+
+  /* Stage dots */
+  .stage-dots {
+    display: flex; gap: 8px; justify-content: center;
+    margin: 16px 0 20px;
+  }
+  .dot {
+    height: 8px; border-radius: 4px;
+    background: var(--border);
+    transition: all 0.4s cubic-bezier(.4,2,.6,1);
+  }
+  .dot.active { background: var(--accent); }
+
+  /* XP bar */
+  .xp-meta {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--muted); margin-bottom: 6px;
+  }
+  .xp-track {
+    background: var(--border); border-radius: 6px; height: 8px; overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 6px;
+    transition: width 0.5s cubic-bezier(.4,2,.6,1);
+    box-shadow: 0 0 8px rgba(232,93,38,0.3);
+  }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 12px 8px; text-align: center;
+  }
+  .stat-icon { font-size: 18px; margin-bottom: 3px; }
+  .stat-val { font-size: 17px; font-weight: 500; color: var(--accent); }
+  .stat-lbl { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Tasks */
+  .tasks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .task-btn {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 12px 10px;
+    text-align: left; cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .task-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(232,93,38,0.1);
+  }
+  .task-icon { font-size: 18px; }
+  .task-lbl { font-size: 11px; color: var(--text); line-height: 1.3; }
+  .task-xp { font-size: 10px; color: var(--accent); font-weight: 500; }
+
+  /* Log */
+  .log-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
+  .log-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; border-radius: 10px; font-size: 11px;
+    border-left: 3px solid transparent;
+    transition: background 0.2s;
+  }
+  .log-item.new { background: rgba(232,93,38,0.06); border-left-color: var(--accent); }
+  .log-text { color: var(--text); }
+  .log-right { display: flex; gap: 10px; align-items: center; flex-shrink: 0; margin-left: 8px; }
+  .log-xp { color: var(--accent); font-weight: 500; }
+  .log-time { color: var(--muted); font-size: 10px; }
+
+  /* XP pop */
+  .xp-pop {
+    position: absolute; top: 10px; right: 16px;
+    color: var(--accent); font-weight: bold; font-size: 22px;
+    pointer-events: none;
+    animation: xpPop 0.7s ease forwards;
+  }
+  @keyframes xpPop {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-44px) scale(1.5); }
+  }
+
+  .footer {
+    text-align: center; font-size: 10px; color: var(--muted);
+    margin-top: 20px; letter-spacing: 1px;
+  }
+
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="eyebrow">◈ Portfolio Companion ◈</div>
+    <h1>PM <span>Pet</span></h1>
+  </div>
+
+  <!-- Pet Card -->
+  <div class="card" id="petCard" style="position:relative; overflow:hidden;">
+    <div class="pet-wrap">
+      <div class="pet-name-row">
+        <span class="pet-name" id="petName" title="Click to rename" onclick="startRename()">Priya</span>
+        <span style="font-size:11px; color:var(--muted); cursor:pointer;" onclick="startRename()">✎</span>
+      </div>
+      <input class="pet-name-input" id="nameInput" style="display:none;"
+        onblur="finishRename()" onkeydown="if(event.key==='Enter') finishRename()" />
+      <div class="pet-stage-label" id="stageLabel">ASPIRING PM</div>
+      <div class="pet-stage-desc" id="stageDesc">"Your product journey begins…"</div>
+      <canvas id="petCanvas" width="160" height="160"></canvas>
+      <div class="stage-dots" id="stageDots"></div>
+      <div class="xp-meta">
+        <span id="xpCurrent">⚡ 0 XP</span>
+        <span id="xpNext">Next stage @ 50 XP</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-icon">⚡</div><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">Total XP</div></div>
+    <div class="stat"><div class="stat-icon">📅</div><div class="stat-val" id="statToday">+0</div><div class="stat-lbl">Today</div></div>
+    <div class="stat"><div class="stat-icon">🎯</div><div class="stat-val" id="statActions">1</div><div class="stat-lbl">Actions</div></div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="card">
+    <div class="card-label">◈ Log Today's PM Work ◈</div>
+    <div class="tasks-grid" id="tasksGrid"></div>
+  </div>
+
+  <!-- Activity Log -->
+  <div class="card">
+    <div class="card-label">◈ Activity Log ◈</div>
+    <div class="log-list" id="logList"></div>
+  </div>
+
+
+
+  <div class="footer">Click your pet's name to rename · Log every win 🌱</div>
+</div>
+
+<script>
+const STAGES = [
+  { name: "Aspiring PM",       minXP: 0,    desc: "Your product journey begins…",        color: "#f5a623" },
+  { name: "Feature Owner",     minXP: 50,   desc: "You shipped your first feature!",     color: "#e85d26" },
+  { name: "Roadmap Driver",    minXP: 150,  desc: "You're thinking in quarters now",     color: "#d94f8a" },
+  { name: "User Advocate",     minXP: 320,  desc: "You live for user interviews",        color: "#9b59b6" },
+  { name: "Stakeholder Pro",   minXP: 600,  desc: "Aligning everyone like a pro",        color: "#2980b9" },
+  { name: "Product Leader",    minXP: 1000, desc: "You're the PM others look up to 🏆", color: "#2d9e6b" },
+];
+
+const TASKS = [
+  { id: "prd",       label: "Wrote a PRD or spec",         xp: 30, icon: "📝" },
+  { id: "interview", label: "Ran a user interview",        xp: 35, icon: "🎙️" },
+  { id: "metrics",   label: "Defined success metrics",     xp: 25, icon: "📊" },
+  { id: "backlog",   label: "Prioritized the backlog",     xp: 20, icon: "🗂️" },
+  { id: "roadmap",   label: "Updated the roadmap",         xp: 30, icon: "🗺️" },
+  { id: "feedback",  label: "Gathered user feedback",      xp: 20, icon: "💬" },
+  { id: "shipped",   label: "Shipped a feature",           xp: 50, icon: "🚀" },
+  { id: "retro",     label: "Ran a retro or review",       xp: 25, icon: "🔄" },
+];
+
+let xp = 0, totalXP = 0, todayXP = 0, actionCount = 1;
+let log = [{ task: "Started the PM portfolio journey 🌱", xp: 0, time: "Now" }];
+let petName = "Priya";
+let bobT = 0, bobY = 0;
+let flashTimer = null;
+
+function getStage() {
+  return [...STAGES].reverse().find(s => xp >= s.minXP) || STAGES[0];
+}
+function getNextStage() {
+  const idx = STAGES.indexOf(getStage());
+  return STAGES[idx + 1] || null;
+}
+function getProgress() {
+  const s = getStage(), n = getNextStage();
+  if (!n) return 100;
+  return ((xp - s.minXP) / (n.minXP - s.minXP)) * 100;
+}
+
+// ---- Canvas Pet ----
+const canvas = document.getElementById('petCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawPet() {
+  const s = getStage();
+  const stageIdx = STAGES.indexOf(s);
+  const W = 160, H = 160;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H / 2 + bobY;
+
+  if (stageIdx === 0) {
+    // Egg
+    ctx.save();
+    const grad = ctx.createRadialGradient(cx-10, cy-14, 4, cx, cy+4, 48);
+    grad.addColorStop(0, '#fff8ee');
+    grad.addColorStop(1, s.color);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy+6, 36, 46, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.4;
+    ctx.stroke(); ctx.globalAlpha = 1;
+    // shine
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.ellipse(cx-10, cy-10, 8, 5, -0.4, 0, Math.PI*2); ctx.fill();
+    // sparkle
+    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('✨', cx, cy+8);
+    ctx.restore();
+    return;
+  }
+
+  // Body blob
+  ctx.save();
+  const bodyGrad = ctx.createRadialGradient(cx-10, cy-12, 5, cx, cy, 38);
+  bodyGrad.addColorStop(0, lighten(s.color, 40));
+  bodyGrad.addColorStop(1, s.color);
+  ctx.fillStyle = bodyGrad;
+
+  // Ears
+  ctx.beginPath();
+  ctx.moveTo(cx-28, cy-28); ctx.lineTo(cx-42, cy-52); ctx.lineTo(cx-14, cy-36); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx+28, cy-28); ctx.lineTo(cx+42, cy-52); ctx.lineTo(cx+14, cy-36); ctx.closePath();
+  ctx.fill();
+
+  // Inner ear
+  ctx.fillStyle = 'rgba(255,180,200,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(cx-27, cy-30); ctx.lineTo(cx-38, cy-48); ctx.lineTo(cx-16, cy-36); ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx+27, cy-30); ctx.lineTo(cx+38, cy-48); ctx.lineTo(cx+16, cy-36); ctx.closePath();
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath(); ctx.arc(cx, cy, 42, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.3; ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Eyes
+  const eyeL = cx - 14, eyeR = cx + 14, eyeY = cy - 8;
+  if (stageIdx >= 4) {
+    // Star eyes for senior stages
+    ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('★', eyeL, eyeY);
+    ctx.fillText('★', eyeR, eyeY);
+  } else {
+    ctx.fillStyle = '#1a1008';
+    ctx.beginPath(); ctx.arc(eyeL, eyeY, 6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeR, eyeY, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(eyeL+2, eyeY-2, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(eyeR+2, eyeY-2, 2, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Nose
+  ctx.fillStyle = '#ff9eb5';
+  ctx.beginPath(); ctx.ellipse(cx, cy+2, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+
+  // Smile
+  ctx.strokeStyle = '#1a1008'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(cx, cy+4, 10, 0.15, Math.PI-0.15); ctx.stroke();
+
+  // Blush
+  ctx.fillStyle = 'rgba(255,150,180,0.28)';
+  ctx.beginPath(); ctx.ellipse(cx-28, cy+6, 10, 6, 0, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx+28, cy+6, 10, 6, 0, 0, Math.PI*2); ctx.fill();
+
+  // Wizard hat for max level
+  if (stageIdx === 5) {
+    ctx.fillStyle = '#2d1b69';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy-56); ctx.lineTo(cx-22, cy-28); ctx.lineTo(cx+22, cy-28); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#3d2b79';
+    ctx.beginPath(); ctx.ellipse(cx, cy-27, 28, 8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.font = '11px serif'; ctx.textAlign = 'center'; ctx.fillText('⭐', cx, cy-44);
+  }
+
+  ctx.restore();
+}
+
+function lighten(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, (n >> 16) + amt);
+  const g = Math.min(255, ((n >> 8) & 0xff) + amt);
+  const b = Math.min(255, (n & 0xff) + amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ---- Animation ----
+let t = 0;
+function animate() {
+  t += 0.03;
+  bobY = Math.sin(t) * 5;
+  drawPet();
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ---- UI Render ----
+function renderStage() {
+  const s = getStage(), n = getNextStage();
+  const idx = STAGES.indexOf(s);
+  document.getElementById('stageLabel').textContent = s.name.toUpperCase();
+  document.getElementById('stageDesc').textContent = `"${s.desc}"`;
+  document.getElementById('xpCurrent').textContent = `⚡ ${xp} XP`;
+  document.getElementById('xpNext').textContent = n ? `Next: ${n.name} @ ${n.minXP} XP` : '🏆 MAX LEVEL';
+  document.getElementById('xpFill').style.width = getProgress() + '%';
+
+  // Dots
+  const dots = document.getElementById('stageDots');
+  dots.innerHTML = '';
+  STAGES.forEach((st, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i <= idx ? ' active' : '');
+    d.style.width = (i === idx ? '28px' : '10px');
+    d.title = st.name;
+    dots.appendChild(d);
+  });
+}
+
+function renderStats() {
+  document.getElementById('statTotal').textContent = totalXP;
+  document.getElementById('statToday').textContent = '+' + todayXP;
+  document.getElementById('statActions').textContent = actionCount;
+}
+
+function renderLog() {
+  const list = document.getElementById('logList');
+  list.innerHTML = log.map((e, i) => `
+    <div class="log-item ${i===0?'new':''}">
+      <span class="log-text">${e.task}</span>
+      <div class="log-right">
+        ${e.xp > 0 ? `<span class="log-xp">+${e.xp}</span>` : ''}
+        <span class="log-time">${e.time}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderTasks() {
+  document.getElementById('tasksGrid').innerHTML = TASKS.map(task => `
+    <button class="task-btn" onclick="doTask('${task.id}')">
+      <span class="task-icon">${task.icon}</span>
+      <span class="task-lbl">${task.label}</span>
+      <span class="task-xp">+${task.xp} XP</span>
+    </button>`).join('');
+}
+
+function doTask(id) {
+  const task = TASKS.find(t => t.id === id);
+  if (!task) return;
+  xp += task.xp; totalXP += task.xp; todayXP += task.xp; actionCount++;
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  log.unshift({ task: task.label, xp: task.xp, time });
+  if (log.length > 10) log.pop();
+
+  renderStage(); renderStats(); renderLog();
+
+  // XP pop
+  const card = document.getElementById('petCard');
+  const pop = document.createElement('div');
+  pop.className = 'xp-pop'; pop.textContent = '+' + task.xp + ' XP';
+  card.appendChild(pop);
+  setTimeout(() => pop.remove(), 700);
+}
+
+function startRename() {
+  const nameEl = document.getElementById('petName');
+  const input = document.getElementById('nameInput');
+  nameEl.style.display = 'none';
+  input.style.display = 'inline-block';
+  input.value = petName;
+  input.focus(); input.select();
+}
+function finishRename() {
+  const input = document.getElementById('nameInput');
+  petName = input.value.trim() || petName;
+  document.getElementById('petName').textContent = petName;
+  document.getElementById('petName').style.display = 'inline';
+  input.style.display = 'none';
+}
+
+// Init
+renderTasks(); renderStage(); renderStats(); renderLog();
+</script>
+</body>
+</html>
