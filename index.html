@@ -105,6 +105,32 @@
     margin-bottom: 16px; text-align: center;
   }
 
+  .pet-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .pet-option {
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 10px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .pet-option:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .pet-option.active {
+    background: rgba(232,93,38,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
   #petCanvas { display: block; }
 
   /* Stage dots */
@@ -215,6 +241,7 @@
         onblur="finishRename()" onkeydown="if(event.key==='Enter') finishRename()" />
       <div class="pet-stage-label" id="stageLabel">ASPIRING PM</div>
       <div class="pet-stage-desc" id="stageDesc">"Your product journey begins…"</div>
+      <div class="pet-picker" id="petPicker"></div>
       <canvas id="petCanvas" width="160" height="160"></canvas>
       <div class="stage-dots" id="stageDots"></div>
       <div class="xp-meta">
@@ -270,9 +297,16 @@ const TASKS = [
   { id: "retro",     label: "Ran a retro or review",       xp: 25, icon: "🔄" },
 ];
 
+const PET_TYPES = [
+  { id: 'cat', label: 'Cat', icon: '🐱', defaultName: 'Priya' },
+  { id: 'bot', label: 'Bot', icon: '🤖', defaultName: 'Pixel' },
+  { id: 'dino', label: 'Dino', icon: '🦖', defaultName: 'Rex' },
+];
+
 let xp = 0, totalXP = 0, todayXP = 0, actionCount = 1;
 let log = [{ task: "Started the PM portfolio journey 🌱", xp: 0, time: "Now" }];
-let petName = "Priya";
+let selectedPet = PET_TYPES[0].id;
+let petName = PET_TYPES[0].defaultName;
 let bobT = 0, bobY = 0;
 let flashTimer = null;
 
@@ -300,6 +334,21 @@ function drawPet() {
   ctx.clearRect(0, 0, W, H);
 
   const cx = W / 2, cy = H / 2 + bobY;
+
+  if (selectedPet === 'bot') {
+    drawBotPet(s, stageIdx, cx, cy);
+    return;
+  }
+
+  if (selectedPet === 'dino') {
+    drawDinoPet(s, stageIdx, cx, cy);
+    return;
+  }
+
+  drawCatPet(s, stageIdx, cx, cy);
+}
+
+function drawCatPet(s, stageIdx, cx, cy) {
 
   if (stageIdx === 0) {
     // Egg
@@ -396,11 +445,165 @@ function drawPet() {
   ctx.restore();
 }
 
+function drawBotPet(s, stageIdx, cx, cy) {
+  ctx.save();
+
+  const glow = ctx.createRadialGradient(cx, cy - 8, 8, cx, cy, 54);
+  glow.addColorStop(0, lighten(s.color, 35));
+  glow.addColorStop(1, s.color);
+  ctx.fillStyle = glow;
+
+  // Antenna
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 54);
+  ctx.lineTo(cx, cy - 34);
+  ctx.stroke();
+  ctx.fillStyle = lighten(s.color, 50);
+  ctx.beginPath(); ctx.arc(cx, cy - 58, 6, 0, Math.PI * 2); ctx.fill();
+
+  // Head body
+  roundRect(ctx, cx - 38, cy - 34, 76, 70, 16);
+  ctx.fillStyle = glow;
+  ctx.fill();
+  ctx.strokeStyle = s.color;
+  ctx.globalAlpha = 0.35;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Eyes
+  ctx.fillStyle = '#1a1008';
+  if (stageIdx >= 4) {
+    ctx.font = '13px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('★', cx - 16, cy - 8);
+    ctx.fillText('★', cx + 16, cy - 8);
+  } else {
+    ctx.beginPath(); ctx.arc(cx - 16, cy - 9, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 16, cy - 9, 6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Mouth panel
+  roundRect(ctx, cx - 18, cy + 8, 36, 14, 6);
+  ctx.strokeStyle = '#1a1008';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy + 15);
+  ctx.lineTo(cx + 8, cy + 15);
+  ctx.stroke();
+
+  // Side bolts
+  ctx.fillStyle = '#cfd7df';
+  ctx.beginPath(); ctx.arc(cx - 43, cy - 2, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 43, cy - 2, 4, 0, Math.PI * 2); ctx.fill();
+
+  if (stageIdx === 5) {
+    ctx.font = '14px serif';
+    ctx.fillStyle = '#2d1b69';
+    ctx.fillText('⚙️', cx, cy - 42);
+  }
+
+  ctx.restore();
+}
+
+function drawDinoPet(s, stageIdx, cx, cy) {
+  ctx.save();
+
+  // Body
+  const body = ctx.createRadialGradient(cx - 16, cy - 12, 8, cx, cy + 8, 56);
+  body.addColorStop(0, lighten(s.color, 30));
+  body.addColorStop(1, s.color);
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 10, 44, 34, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Head
+  ctx.beginPath();
+  ctx.ellipse(cx + 10, cy - 20, 32, 28, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tail
+  ctx.beginPath();
+  ctx.moveTo(cx - 40, cy + 6);
+  ctx.lineTo(cx - 66, cy - 10);
+  ctx.lineTo(cx - 52, cy + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Belly
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 4, cy + 14, 20, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spikes
+  ctx.fillStyle = darken(s.color, 20);
+  [-10, 2, 14, 26].forEach((xOff, i) => {
+    ctx.beginPath();
+    ctx.moveTo(cx + xOff, cy - 44 + i * 2);
+    ctx.lineTo(cx + xOff + 6, cy - 30 + i * 2);
+    ctx.lineTo(cx + xOff - 6, cy - 30 + i * 2);
+    ctx.closePath();
+    ctx.fill();
+  });
+
+  // Eyes + smile
+  const eyeY = cy - 24;
+  if (stageIdx >= 4) {
+    ctx.font = '12px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('★', cx + 2, eyeY);
+    ctx.fillText('★', cx + 21, eyeY);
+  } else {
+    ctx.fillStyle = '#1a1008';
+    ctx.beginPath(); ctx.arc(cx + 2, eyeY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 21, eyeY, 4, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.strokeStyle = '#1a1008';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx + 12, cy - 11, 9, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+
+  // Feet
+  ctx.fillStyle = body;
+  ctx.beginPath(); ctx.ellipse(cx - 10, cy + 40, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 18, cy + 40, 10, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+  if (stageIdx === 5) {
+    ctx.font = '14px serif';
+    ctx.fillText('🏆', cx + 40, cy - 36);
+  }
+
+  ctx.restore();
+}
+
+function roundRect(context, x, y, w, h, r) {
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + w, y, x + w, y + h, r);
+  context.arcTo(x + w, y + h, x, y + h, r);
+  context.arcTo(x, y + h, x, y, r);
+  context.arcTo(x, y, x + w, y, r);
+  context.closePath();
+}
+
 function lighten(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   const r = Math.min(255, (n >> 16) + amt);
   const g = Math.min(255, ((n >> 8) & 0xff) + amt);
   const b = Math.min(255, (n & 0xff) + amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+function darken(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, (n >> 16) - amt);
+  const g = Math.max(0, ((n >> 8) & 0xff) - amt);
+  const b = Math.max(0, (n & 0xff) - amt);
   return `rgb(${r},${g},${b})`;
 }
 
@@ -463,6 +666,30 @@ function renderTasks() {
     </button>`).join('');
 }
 
+function renderPetPicker() {
+  const picker = document.getElementById('petPicker');
+  picker.innerHTML = PET_TYPES.map(p => `
+    <button class="pet-option ${p.id === selectedPet ? 'active' : ''}" onclick="setPetType('${p.id}')">
+      ${p.icon} ${p.label}
+    </button>
+  `).join('');
+}
+
+function setPetType(id) {
+  const nextPet = PET_TYPES.find(p => p.id === id);
+  const currentPet = PET_TYPES.find(p => p.id === selectedPet);
+  if (!nextPet || id === selectedPet) return;
+
+  if (petName === currentPet.defaultName || !petName.trim()) {
+    petName = nextPet.defaultName;
+    document.getElementById('petName').textContent = petName;
+  }
+
+  selectedPet = id;
+  renderPetPicker();
+  drawPet();
+}
+
 function doTask(id) {
   const task = TASKS.find(t => t.id === id);
   if (!task) return;
@@ -499,7 +726,7 @@ function finishRename() {
 }
 
 // Init
-renderTasks(); renderStage(); renderStats(); renderLog();
+renderTasks(); renderPetPicker(); renderStage(); renderStats(); renderLog();
 </script>
 </body>
 </html>
